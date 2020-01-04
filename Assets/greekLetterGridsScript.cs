@@ -2426,19 +2426,19 @@ public class greekLetterGridsScript : MonoBehaviour
                             case 0:
                                 letter1CorrectX = letter1InitialX;
                                 letter1CorrectZ = letter1InitialZ;
-                                Debug.Log("UPPERCASE SIGMA CONDITION: #EX (SIG is off or absent)");
+                                Debug.Log("UPPERCASE SIGMA CONDITION: #EX (SIG is present and on)");
                                 Debug.Log("The correct X is " + letter1CorrectX.ToString() + " and the correct Z is " + letter1CorrectZ.ToString());
                                 break;
                             case 1:
                                 letter2CorrectX = letter2InitialX;
                                 letter2CorrectZ = letter2InitialZ;
-                                Debug.Log("UPPERCASE SIGMA CONDITION: #EX (SIG is off or absent)");
+                                Debug.Log("UPPERCASE SIGMA CONDITION: #EX (SIG is present and on)");
                                 Debug.Log("The correct X is " + letter2CorrectX.ToString() + " and the correct Z is " + letter2CorrectZ.ToString());
                                 break;
                             case 2:
                                 letter3CorrectX = letter3InitialX;
                                 letter3CorrectZ = letter3InitialZ;
-                                Debug.Log("UPPERCASE SIGMA CONDITION: #EX (SIG is off or absent)");
+                                Debug.Log("UPPERCASE SIGMA CONDITION: #EX (SIG is present and on)");
                                 Debug.Log("The correct X is " + letter3CorrectX.ToString() + " and the correct Z is " + letter3CorrectZ.ToString());
                                 break;
                         }
@@ -2606,19 +2606,19 @@ public class greekLetterGridsScript : MonoBehaviour
                             case 0:
                                 letter1CorrectX = letter1InitialX;
                                 letter1CorrectZ = letter1InitialZ;
-                                Debug.Log("LOWERCASE SIGMA CONDITION: #EX (SIG is off or absent)");
+                                Debug.Log("LOWERCASE SIGMA CONDITION: #EX (SIG is present and on)");
                                 Debug.Log("The correct X is " + letter1CorrectX.ToString() + " and the correct Z is " + letter1CorrectZ.ToString());
                                 break;
                             case 1:
                                 letter2CorrectX = letter2InitialX;
                                 letter2CorrectZ = letter2InitialZ;
-                                Debug.Log("LOWERCASE SIGMA CONDITION: #EX (SIG is off or absent)");
+                                Debug.Log("LOWERCASE SIGMA CONDITION: #EX (SIG is present and on)");
                                 Debug.Log("The correct X is " + letter2CorrectX.ToString() + " and the correct Z is " + letter2CorrectZ.ToString());
                                 break;
                             case 2:
                                 letter3CorrectX = letter3InitialX;
                                 letter3CorrectZ = letter3InitialZ;
-                                Debug.Log("LOWERCASE SIGMA CONDITION: #EX (SIG is off or absent)");
+                                Debug.Log("LOWERCASE SIGMA CONDITION: #EX (SIG is present and on)");
                                 Debug.Log("The correct X is " + letter3CorrectX.ToString() + " and the correct Z is " + letter3CorrectZ.ToString());
                                 break;
                         }
@@ -3011,6 +3011,7 @@ public class greekLetterGridsScript : MonoBehaviour
     }
 
     //TP Support
+    int TwitchModuleScore = 1;
     public string TwitchHelpMessage = "Select a letter to move with !{0} select [1 | 2 | 3]. Use the arrow buttons with !{0} [press | move] [u | l | r | d]. You can string as many movements together in one command so long as there is no separation between movements. Reset with !{0} reset. Submit with !{0} submit.";
     public KMSelectable[] ProcessTwitchCommand(string command)
     {
@@ -3047,9 +3048,9 @@ public class greekLetterGridsScript : MonoBehaviour
                 switch (pieces[i])
                 {
                     case "u": btns.Add(upButton); break;
-                    case "l": btns.Add(upButton); break;
-                    case "r": btns.Add(upButton); break;
-                    case "d": btns.Add(upButton); break;
+                    case "l": btns.Add(leftButton); break;
+                    case "r": btns.Add(rightButton); break;
+                    case "d": btns.Add(downButton); break;
                     default:
                         if (pieces[i].All(c => new[] { 'u', 'l', 'r', 'd' }.Contains(c)))
                         {
