@@ -21,6 +21,15 @@ public class greekLetterGridsScript : MonoBehaviour
     string[] possibleLetters = { "A", "α", "B", "β", "Γ", "γ", "Δ", "δ", "Θ", "θ", "Λ", "λ", "Π", "π", "Σ", "σ", "Ω", "ω" };
     Color[] possibleColors = { new Color(1, 1, 1, 1), new Color(1, 0, 1, 1), new Color(1, 1, 0, 1), new Color(0, 1, 0, 1), new Color(0, 1, 1, 1) }; //Order of Colors: White, Magenta, Yellow, Green, Cyan
     float[] possibleXorZ = { -0.0375f, -0.0125f, 0.0125f, 0.0375f };
+    /*
+     *         X Axis Reference
+     * -0.0375f, -0.0125f, 0.0125f, 0.0375f
+     *    A          B        C        D
+     *    
+     *         Z Axis Reference
+     * -0.0375f, -0.0125f, 0.0125f, 0.0375f
+     *    4          3        2        1
+     */
     float letter1InitialX;
     float letter1InitialZ;
     float letter2InitialX;
@@ -1089,19 +1098,19 @@ public class greekLetterGridsScript : MonoBehaviour
                         switch (i)
                         {
                             case 0:
-                                letter1CorrectX = 0.0125f;
+                                letter1CorrectX = -0.0125f;
                                 letter1CorrectZ = -0.0125f;
                                 Debug.Log("LOWERCASE DELTA CONDITION: #1 (this letter is the only lowercase letter on the module)");
                                 Debug.Log("The correct X is " + letter1CorrectX.ToString() + " and the correct Z is " + letter1CorrectZ.ToString());
                                 break;
                             case 1:
-                                letter2CorrectX = 0.0125f;
+                                letter2CorrectX = -0.0125f;
                                 letter2CorrectZ = -0.0125f;
                                 Debug.Log("LOWERCASE DELTA CONDITION: #1 (this letter is the only lowercase letter on the module)");
                                 Debug.Log("The correct X is " + letter2CorrectX.ToString() + " and the correct Z is " + letter2CorrectZ.ToString());
                                 break;
                             case 2:
-                                letter3CorrectX = 0.0125f;
+                                letter3CorrectX = -0.0125f;
                                 letter3CorrectZ = -0.0125f;
                                 Debug.Log("LOWERCASE DELTA CONDITION: #1 (this letter is the only lowercase letter on the module)");
                                 Debug.Log("The correct X is " + letter3CorrectX.ToString() + " and the correct Z is " + letter3CorrectZ.ToString());
@@ -2579,19 +2588,19 @@ public class greekLetterGridsScript : MonoBehaviour
                             {
                                 case 0:
                                     letter1CorrectX = -0.0375f;
-                                    letter1CorrectZ = -0.0375f;
+                                    letter1CorrectZ = 0.0375f;
                                     Debug.Log("LOWERCASE SIGMA CONDITION: #5 (N/A)");
                                     Debug.Log("The correct X is " + letter1CorrectX.ToString() + " and the correct Z is " + letter1CorrectZ.ToString());
                                     break;
                                 case 1:
                                     letter2CorrectX = -0.0375f;
-                                    letter2CorrectZ = -0.0375f;
+                                    letter2CorrectZ = 0.0375f;
                                     Debug.Log("LOWERCASE SIGMA CONDITION: #5 (N/A)");
                                     Debug.Log("The correct X is " + letter2CorrectX.ToString() + " and the correct Z is " + letter2CorrectZ.ToString());
                                     break;
                                 case 2:
                                     letter3CorrectX = -0.0375f;
-                                    letter3CorrectZ = -0.0375f;
+                                    letter3CorrectZ = 0.0375f;
                                     Debug.Log("LOWERCASE SIGMA CONDITION: #5 (N/A)");
                                     Debug.Log("The correct X is " + letter3CorrectX.ToString() + " and the correct Z is " + letter3CorrectZ.ToString());
                                     break;
