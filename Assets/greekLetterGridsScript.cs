@@ -66,8 +66,23 @@ public class greekLetterGridsScript : MonoBehaviour
     private Edgework bombEdgework;
     class Edgework
     {
-        public string serialNumber;
-
+        public string SerialNumber;
+        public IEnumerable<char> SerialNumberLetters;
+        public bool SNDIndicatorOff;
+        public bool CARIndicatorOff;
+        public bool CLRIndicatorOn;
+        public bool SIGIndicatorOn;
+        public bool DVINotRJ;
+        public bool RCAPresent;
+        public bool ParallelPresent;
+        public bool EmptyPlate;
+        public bool PS2orDuplicate;
+        public int OnIndicatorCount;
+        public int OffIndicatorCount;
+        public int PortPlateCount;
+        public int DBatteryCount;
+        public int AABatteryCount;
+        public int BatteryHolderCount;
     }
 
     void Awake()
@@ -185,7 +200,23 @@ public class greekLetterGridsScript : MonoBehaviour
         {
             DebugLog("The last digit of the serial # is COMPOSITE");
         }
-        bombEdgework.serialNumber = serialNumber;
+        bombEdgework.SerialNumber = serialNumber;
+        bombEdgework.SerialNumberLetters = bomb.GetSerialNumberLetters();
+        bombEdgework.SNDIndicatorOff = bomb.IsIndicatorOff("SND") || bomb.IsIndicatorOff("IND");
+        bombEdgework.CARIndicatorOff = bomb.IsIndicatorOff("CAR");
+        bombEdgework.CLRIndicatorOn = bomb.IsIndicatorOn("CLR");
+        bombEdgework.SIGIndicatorOn = !bomb.IsIndicatorOn("SIG");
+        bombEdgework.DVINotRJ = bomb.IsPortPresent(Port.DVI) && !bomb.IsPortPresent(Port.RJ45);
+        bombEdgework.RCAPresent = bomb.IsPortPresent(Port.StereoRCA);
+        bombEdgework.ParallelPresent = bomb.IsPortPresent(Port.Parallel);
+        bombEdgework.EmptyPlate = bomb.GetPortPlates().Any(x => x.Length == 0);
+        bombEdgework.PS2orDuplicate = bomb.IsPortPresent(Port.PS2) || bomb.IsDuplicatePortPresent();
+        bombEdgework.OnIndicatorCount = bomb.GetOnIndicators().Count();
+        bombEdgework.OffIndicatorCount = bomb.GetOffIndicators().Count();
+        bombEdgework.PortPlateCount = bomb.GetPortPlateCount();
+        bombEdgework.DBatteryCount = bomb.GetBatteryCount(Battery.D);
+        bombEdgework.AABatteryCount = bomb.GetBatteryCount(Battery.AA) + bomb.GetBatteryCount(Battery.AAx3) + bomb.GetBatteryCount(Battery.AAx4);
+        bombEdgework.BatteryHolderCount = bomb.GetBatteryHolderCount();
     }
 
     void Rules()
@@ -193,8 +224,14 @@ public class greekLetterGridsScript : MonoBehaviour
         string[] lettersCorrect = new string[] { "", "", "" };
         float[] lettersInitialX = new float[] { letter1InitialX, letter2InitialX, letter3InitialX };
         float[] lettersInitialZ = new float[] { letter1InitialZ, letter2InitialZ, letter3InitialZ };
-        string serialNumber = bombEdgework.serialNumber;
+        string serialNumber = bombEdgework.SerialNumber;
         string serialNumberLastChar = serialNumber.Substring(serialNumber.Length - 1);
+        //Shorthand to avoid typing bombEdgework everywhere
+        Edgework b = bombEdgework;
+        int batteryCount = b.DBatteryCount + b.AABatteryCount;
+        int indicatorCount = b.OnIndicatorCount + b.OffIndicatorCount;
+        int solvedModules = bomb.GetSolvedModuleNames().Count;
+        int strikes = bomb.GetStrikes();
 
         //Check for each letter (e.g. if there is an uppercase alpha)
         for (int i = 0; i < letters.Length; i++)
@@ -215,7 +252,7 @@ public class greekLetterGridsScript : MonoBehaviour
                         DebugLog("UPPERCASE ALPHA CONDITION: #2 (This letter is yellow)");
                     }
                     //Otherwise of there is an unlit SND or an unlit IND...
-                    else if (bomb.IsIndicatorOff("SND") || bomb.IsIndicatorOff("IND"))
+                    else if (b.SNDIndicatorOff)
                     {
                         lettersCorrect[i] = "D3";
                         DebugLog("UPPERCASE ALPHA CONDITION: #3 (Unlit SND or IND detected)");
@@ -242,7 +279,7 @@ public class greekLetterGridsScript : MonoBehaviour
                         DebugLog("LOWERCASE ALPHA CONDITION: #1 (Initially in column D)");
                     }
                     //Otherwise if 3 or more batteries...
-                    else if (bomb.GetBatteryCount() >= 3)
+                    else if (batteryCount >= 3)
                     {
                         lettersCorrect[i] = "D1";
                         DebugLog("LOWERCASE ALPHA CONDITION: #2 (3+ batteries detected)");
@@ -254,7 +291,7 @@ public class greekLetterGridsScript : MonoBehaviour
                         DebugLog("LOWERCASE ALPHA CONDITION: #3 (this letter is green & delta detected)");
                     }
                     //Otherwise, if there's a lit CLR...
-                    else if (bomb.IsIndicatorOn("CLR"))
+                    else if (b.CLRIndicatorOn)
                     {
                         lettersCorrect[i] = "A1";
                         DebugLog("LOWERCASE ALPHA CONDITION: #4 (lit CLR detected)");
@@ -320,7 +357,7 @@ public class greekLetterGridsScript : MonoBehaviour
                         DebugLog("LOWERCASE BETA CONDITION: #3 (this letter is magenta/cyan)");
                     }
                     //Otherwise, if there is a DVI and no RJ45...
-                    else if (bomb.IsPortPresent(Port.DVI) && !bomb.IsPortPresent(Port.RJ45))
+                    else if (b.DVINotRJ)
                     {
                         lettersCorrect[i] = "B2";
                         DebugLog("LOWERCASE BETA CONDITION: #4 (DVI and no RJ45 detected)");
@@ -335,13 +372,13 @@ public class greekLetterGridsScript : MonoBehaviour
 
                 case "Γ":
                     //If the serial number contains a letter that is in the first half of the alphabet...
-                    if (bomb.GetSerialNumberLetters().Any(x => x == 'A' || x == 'B' || x == 'C' || x == 'D' || x == 'E' || x == 'F' || x == 'G' || x == 'H' || x == 'I' || x == 'J' || x == 'K' || x == 'L' || x == 'M'))
+                    if (b.SerialNumberLetters.Any(x => x == 'A' || x == 'B' || x == 'C' || x == 'D' || x == 'E' || x == 'F' || x == 'G' || x == 'H' || x == 'I' || x == 'J' || x == 'K' || x == 'L' || x == 'M'))
                     {
                         lettersCorrect[i] = "D2";
                         DebugLog("UPPERCASE GAMMA CONDITION: #1 (A letter in the serial number is found in the first half of the English Alphabet)");
                     }
                     //Otherwise, if there is an empty port plate...
-                    else if (bomb.GetPortPlates().Any(x => x.Length == 0))
+                    else if (b.EmptyPlate)
                     {
                         lettersCorrect[i] = "C2";
                         DebugLog("UPPERCASE GAMMA CONDITION: #2 (empty port plate detected)");
@@ -374,7 +411,7 @@ public class greekLetterGridsScript : MonoBehaviour
                         DebugLog("LOWERCASE GAMMA CONDITION: #1 (theta detected)");
                     }
                     //Otherwise, if not cyan and serial number contains vowel...
-                    else if (lettersText[i].color != new Color(0, 1, 1, 1) && bomb.GetSerialNumberLetters().Any(x => x == 'A' || x == 'E' || x == 'I' || x == 'O' || x == 'U'))
+                    else if (lettersText[i].color != new Color(0, 1, 1, 1) && b.SerialNumberLetters.Any(x => x == 'A' || x == 'E' || x == 'I' || x == 'O' || x == 'U'))
                     {
                         lettersCorrect[i] = "B3";
                         DebugLog("LOWERCASE GAMMA CONDITION: #2 (this letter is NOT cyan and vowel detected)");
@@ -410,13 +447,13 @@ public class greekLetterGridsScript : MonoBehaviour
 
                 case "Δ":
                     //If there is a stereo RCA port...
-                    if (bomb.IsPortPresent(Port.StereoRCA))
+                    if (b.RCAPresent)
                     {
                         lettersCorrect[i] = "B2";
                         DebugLog("UPPERCASE DELTA CONDITION: #1 (stereo RCA detected)");
                     }
                     //Otherwise, if the number of batteries is greater than the last digit of the serial number...
-                    else if (bomb.GetBatteryCount() > int.Parse(serialNumberLastChar))
+                    else if (batteryCount > int.Parse(serialNumberLastChar))
                     {
                         lettersCorrect[i] = "A3";
                         DebugLog("UPPERCASE DELTA CONDITION: #2 (battery count > last digit in serial number)");
@@ -449,7 +486,7 @@ public class greekLetterGridsScript : MonoBehaviour
                         DebugLog("LOWERCASE DELTA CONDITION: #1 (this letter is the only lowercase letter on the module)");
                     }
                     //Otherwise, if the number of solved modules + the last digit of the serial number > 10...
-                    else if (bomb.GetSolvedModuleNames().Count + int.Parse(serialNumberLastChar) > 10)
+                    else if (solvedModules + int.Parse(serialNumberLastChar) > 10)
                     {
                         lettersCorrect[i] = "B3";
                         DebugLog("LOWERCASE DELTA CONDITION: #2 (solved modules + last digit > 10)");
@@ -476,13 +513,13 @@ public class greekLetterGridsScript : MonoBehaviour
 
                 case "Θ":
                     //If the number of D batteries is greater than the number of AA batteries...
-                    if (bomb.GetBatteryCount(Battery.D) > (bomb.GetBatteryCount(Battery.AA) + bomb.GetBatteryCount(Battery.AAx3) + bomb.GetBatteryCount(Battery.AAx4)))
+                    if (b.DBatteryCount > b.AABatteryCount)
                     {
                         lettersCorrect[i] = "A4";
                         DebugLog("UPPERCASE THETA CONDITION: #1 (D batteries outnumber AA)");
                     }
                     //Otherwise, if there is an unlit CAR indicator...
-                    else if (bomb.IsIndicatorOff("CAR"))
+                    else if (b.CARIndicatorOff)
                     {
                         //zIndex should be the position in possibleXorZ that matches our desired value
                         //Serial 0: index 3 - shown 1, Serial 3: index 0 - shown 4, Serial 9: index 2 - shown 2
@@ -493,7 +530,7 @@ public class greekLetterGridsScript : MonoBehaviour
                     //Otherwise, if the colors of all 3 letters are unique...
                     else if (lettersText[i].color != lettersText[(i + 1) % letters.Length].color && lettersText[i].color != lettersText[(i + 2) % letters.Length].color && lettersText[(i + 1) % letters.Length].color != lettersText[(i + 2) % letters.Length].color)
                     {
-                        int zIndex = 3 - (bomb.GetPortPlateCount() % 4);
+                        int zIndex = 3 - (b.PortPlateCount % 4);
                         lettersCorrect[i] = CoordinateConversion(possibleXorZ[3], possibleXorZ[zIndex]);
                         DebugLog("UPPERCASE THETA CONDITION: #3 (all colors are unique)");
                     }
@@ -521,18 +558,18 @@ public class greekLetterGridsScript : MonoBehaviour
                     //Otherwise, if this letter is white...
                     else if (lettersText[i].color == new Color(1, 1, 1, 1))
                     {
-                        int zIndex = 3 - (bomb.GetStrikes() % 4);
+                        int zIndex = 3 - (strikes % 4);
                         lettersCorrect[i] = CoordinateConversion(possibleXorZ[2], possibleXorZ[zIndex]);
                         DebugLog("LOWERCASE THETA CONDITION: #2 (this letter is white)");
                     }
                     //Otherwise, if the number of solved modules is less than or equal to the number of current strikes...
-                    else if (bomb.GetSolvedModuleNames().Count <= bomb.GetStrikes())
+                    else if (solvedModules <= strikes)
                     {
                         lettersCorrect[i] = CoordinateConversion(lettersInitialX[i], lettersInitialZ[i]);
                         DebugLog("LOWERCASE THETA CONDITION: #3 (solved modules <= strikes)");
                     }
                     //Otherwise, if there is a PS/2 port or any duplicate ports of any type...
-                    else if (bomb.IsPortPresent(Port.PS2) || bomb.IsDuplicatePortPresent())
+                    else if (b.PS2orDuplicate)
                     {
                         lettersCorrect[i] = "B1";
                         DebugLog("LOWERCASE THETA CONDITION: #4 (PS/2 detected OR duplicate port detected)");
@@ -547,25 +584,25 @@ public class greekLetterGridsScript : MonoBehaviour
 
                 case "Λ":
                     //If the serial number contains an A...
-                    if (bomb.GetSerialNumberLetters().Any(x => x == 'A'))
+                    if (b.SerialNumberLetters.Any(x => x == 'A'))
                     {
                         lettersCorrect[i] = "A1";
                         DebugLog("UPPERCASE LAMBDA CONDITION: #1 (letter A detected)");
                     }
                     //Otherwise, if the serial number contains a B...
-                    else if (bomb.GetSerialNumberLetters().Any(x => x == 'B'))
+                    else if (b.SerialNumberLetters.Any(x => x == 'B'))
                     {
                         lettersCorrect[i] = "B1";
                         DebugLog("UPPERCASE LAMBDA CONDITION: #2 (letter B detected)");
                     }
                     //Otherwise, if the serial number contains a D...
-                    else if (bomb.GetSerialNumberLetters().Any(x => x == 'D'))
+                    else if (b.SerialNumberLetters.Any(x => x == 'D'))
                     {
                         lettersCorrect[i] = "D1";
                         DebugLog("UPPERCASE LAMBDA CONDITION: #3 (letter D detected)");
                     }
                     //Otherwise if the serial number contains either an L or an M...
-                    else if (bomb.GetSerialNumberLetters().Any(x => x == 'L' || x == 'M'))
+                    else if (b.SerialNumberLetters.Any(x => x == 'L' || x == 'M'))
                     {
                         lettersCorrect[i] = "C1";
                         DebugLog("UPPERCASE LAMBDA CONDITION: #4 (letter L/M detected)");
@@ -580,7 +617,7 @@ public class greekLetterGridsScript : MonoBehaviour
 
                 case "λ":
                     //If there are 2 or more lit indicators...
-                    if (bomb.GetOnIndicators().Count() >= 2)
+                    if (b.OnIndicatorCount >= 2)
                     {
                         lettersCorrect[i] = "D3";
                         DebugLog("LOWERCASE LAMBDA CONDITION: #1 (lit indicator count >= 2)");
@@ -592,7 +629,7 @@ public class greekLetterGridsScript : MonoBehaviour
                         DebugLog("LOWERCASE LAMBDA CONDITION: #2 (shared color with only 1 letter)");
                     }
                     //Otherwise, if there are more batteries than port plates...
-                    else if (bomb.GetBatteryCount() > bomb.GetPortPlateCount())
+                    else if (batteryCount > b.PortPlateCount)
                     {
                         lettersCorrect[i] = "A1";
                         DebugLog("LOWERCASE LAMBDA CONDITION: #3 (battery count > port plate count)");
@@ -660,24 +697,24 @@ public class greekLetterGridsScript : MonoBehaviour
                         DebugLog("LOWERCASE PI CONDITION: #1 (serial number is 3, 1, or 4)");
                     }
                     //Otherwise, if the number of battery holders is either 3, 1, or 4...
-                    else if (bomb.GetBatteryHolderCount() == 3 || bomb.GetBatteryHolderCount() == 1 || bomb.GetBatteryHolderCount() == 4)
+                    else if (b.BatteryHolderCount == 3 || b.BatteryHolderCount == 1 || b.BatteryHolderCount == 4)
                     {
                         //4 holders -> 3 index -> 0 pos, 1 holder -> 0 index -> 3 pos, 3 holders -> 2 index -> 1 pos
-                        int zIndex = 4 - (bomb.GetBatteryHolderCount() % 4);
+                        int zIndex = 4 - b.BatteryHolderCount;
                         lettersCorrect[i] = CoordinateConversion(possibleXorZ[3], possibleXorZ[zIndex]);
                         DebugLog("LOWERCASE PI CONDITION: #2 (battery holder count is 3, 1, or 4)");
                     }
                     //Otherwise, if the number of indicators (both lit and unlit) is either 3, 1, or 4...
                     else if (bomb.GetIndicators().Count() == 3 || bomb.GetIndicators().Count() == 1 || bomb.GetIndicators().Count() == 4)
                     {
-                        int zIndex = 4 - (bomb.GetIndicators().Count() % 4);
+                        int zIndex = 4 - indicatorCount;
                         lettersCorrect[i] = CoordinateConversion(possibleXorZ[1], possibleXorZ[zIndex]);
                         DebugLog("LOWERCASE PI CONDITION: #3 (indicator count is 3, 1, or 4)");
                     }
                     //Otherwise, if the number of solved modules is either 3, 1, or 4...
                     else if (bomb.GetSolvedModuleNames().Count() == 3 || bomb.GetSolvedModuleNames().Count() == 1 || bomb.GetSolvedModuleNames().Count() == 4)
                     {
-                        int zIndex = 4 - (bomb.GetSolvableModuleNames().Count() % 4);
+                        int zIndex = 4 - solvedModules;
                         lettersCorrect[i] = CoordinateConversion(possibleXorZ[2], possibleXorZ[zIndex]);
                         DebugLog("LOWERCASE PI CONDITION: #4 (solved module count is 3, 1, or 4)");
                     }
@@ -691,7 +728,7 @@ public class greekLetterGridsScript : MonoBehaviour
 
                 case "Σ":
                 case "σ":
-                    if (bomb.IsIndicatorOn("SIG"))
+                    if (b.SIGIndicatorOn)
                     {
                         lettersCorrect[i] = CoordinateConversion(lettersInitialX[i], lettersInitialZ[i]);
                         DebugLog("SIGMA CONDITION: #EX (SIG is present and on)");
@@ -699,25 +736,25 @@ public class greekLetterGridsScript : MonoBehaviour
                     else if (lettersText[i].text == "Σ")
                     {
                         //If the number of batteries plus the number of current strikes is greater than or equal to 5...
-                        if (bomb.GetBatteryCount() + bomb.GetStrikes() >= 5)
+                        if (batteryCount + strikes >= 5)
                         {
                             lettersCorrect[i] = "A4";
                             DebugLog("UPPERCASE SIGMA CONDITION: #1 (battery count + strike count >= 5)");
                         }
                         //Otherwise, if the number of lit indicators plus the number of port plates is greater than or equal to 5...
-                        else if (bomb.GetOnIndicators().Count() + bomb.GetPortPlateCount() >= 5)
+                        else if (b.OnIndicatorCount + b.PortPlateCount >= 5)
                         {
                             lettersCorrect[i] = "C2";
                             DebugLog("UPPERCASE SIGMA CONDITION: #2 (lit indicator count + port plate count >= 5)");
                         }
                         //Otherwise, if the number of unlit indicators plus the last digit of the serial number is greater than or equal to 5...
-                        else if (bomb.GetOffIndicators().Count() + int.Parse(serialNumberLastChar) >= 5)
+                        else if (b.OffIndicatorCount + int.Parse(serialNumberLastChar) >= 5)
                         {
                             lettersCorrect[i] = "B1";
                             DebugLog("UPPERCASE SIGMA CONDITION: #3 (unlit indicator count + last digit of serial number >= 5)");
                         }
                         //Otherwise, if the number of solved modules plus the number of battery holders is greater than or equal to 5...
-                        else if (bomb.GetSolvedModuleNames().Count() + bomb.GetBatteryHolderCount() >= 5)
+                        else if (solvedModules + b.BatteryHolderCount >= 5)
                         {
                             lettersCorrect[i] = "D1";
                             DebugLog("UPPERCASE SIGMA CONDITION: #4 (solved module count + battery holder count >= 5)");
@@ -740,7 +777,7 @@ public class greekLetterGridsScript : MonoBehaviour
                             DebugLog("LOWERCASE SIGMA CONDITION: #1 (this letter is green)");
                         }
                         //Otherwise, if there is a parallel port...
-                        else if (bomb.IsPortPresent(Port.Parallel))
+                        else if (b.ParallelPresent)
                         {
                             lettersCorrect[i] = "B4";
                             DebugLog("LOWERCASE SIGMA CONDITION: #2 (parallel port detected)");
@@ -779,7 +816,7 @@ public class greekLetterGridsScript : MonoBehaviour
                         DebugLog("UPPERCASE OMEGA CONDITION: #1 (letter is magenta)");
                     }
                     //Otherwise, if the serial number contains a Z...
-                    else if (bomb.GetSerialNumberLetters().Contains('Z'))
+                    else if (b.SerialNumberLetters.Contains('Z'))
                     {
                         lettersCorrect[i] = "C2";
                         DebugLog("UPPERCASE OMEGA CONDITION: #2 (serial number Z detected)");
@@ -812,13 +849,13 @@ public class greekLetterGridsScript : MonoBehaviour
                         DebugLog("LOWERCASE OMEGA CONDITION: #1 (this letter starts in C4)");
                     }
                     //Otherwise, if the serial number contains a W...
-                    else if (bomb.GetSerialNumberLetters().Contains('W'))
+                    else if (b.SerialNumberLetters.Contains('W'))
                     {
                         lettersCorrect[i] = "A2";
                         DebugLog("LOWERCASE OMEGA CONDITION: #2 (serial letter contains W)");
                     }
                     //Otherwise, if there are 0 batteries...
-                    else if (bomb.GetBatteryCount() == 0)
+                    else if (batteryCount == 0)
                     {
                         lettersCorrect[i] = "C3";
                         DebugLog("LOWERCASE OMEGA CONDITION: #3 (0 batteries detected)");
