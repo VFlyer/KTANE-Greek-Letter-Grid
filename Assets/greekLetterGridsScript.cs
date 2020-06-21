@@ -17,6 +17,7 @@ public class greekLetterGridsScript : MonoBehaviour
     public KMSelectable resetButton;
     public KMSelectable submitButton;
     public KMSelectable[] letters;
+    public TextMesh[] lettersText;
     private KMSelectable selectedLetter;
     string[] possibleLetters = { "A", "α", "B", "β", "Γ", "γ", "Δ", "δ", "Θ", "θ", "Λ", "λ", "Π", "π", "Σ", "σ", "Ω", "ω" };
     Color[] possibleColors = { new Color(1, 1, 1, 1), new Color(1, 0, 1, 1), new Color(1, 1, 0, 1), new Color(0, 1, 0, 1), new Color(0, 1, 1, 1) }; //Order of Colors: White, Magenta, Yellow, Green, Cyan
@@ -61,6 +62,14 @@ public class greekLetterGridsScript : MonoBehaviour
     private int moduleId;
     private bool moduleSolved = false;
 
+    //Edgework
+    private Edgework bombEdgework;
+    class Edgework
+    {
+        public string serialNumber;
+
+    }
+
     void Awake()
     {
         moduleId = moduleIdCounter++;
@@ -80,11 +89,6 @@ public class greekLetterGridsScript : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        //TextMesh variables so we only have three calls to GetComponent<TextMesh>
-        TextMesh[] lettersText = new TextMesh[3];
-        for (int i = 0; i < letters.Length; i++)
-            lettersText[i] = letters[i].GetComponent<TextMesh>();
-
         //Setting Randomized Colors & Letters
         //Holiday rules before full random
         if (System.DateTime.Now.Month == 1 && System.DateTime.Now.Day == 31) //The Mega Man X OVA "The Day of Sigma" was released on 01/31/06. All letters are now uppercase sigma. I'm sorry. I'm a Mega Man fanboy.
@@ -148,6 +152,19 @@ public class greekLetterGridsScript : MonoBehaviour
 
         //Determine Solution
         //Get Edgework Vars
+        DefineEdgework();
+        Rules();
+
+        //Verify the expected coordinate is the same as the reported coordinate (Debug code)
+        Debug.LogFormat("<Greek Letter Grid #{0}> First:{1}, Second:{2}, Third:{3}", moduleId,
+            CoordinateConversion(letter1CorrectX, letter1CorrectZ),
+            CoordinateConversion(letter2CorrectX, letter2CorrectZ),
+            CoordinateConversion(letter3CorrectX, letter3CorrectZ));
+    }
+
+    void DefineEdgework()
+    {
+        bombEdgework = new Edgework();
         string serialNumber = bomb.GetSerialNumber();
         string serialNumberLastChar = serialNumber.Substring(serialNumber.Length - 1);
         DebugLog("The last digit of the serial # is " + serialNumberLastChar);
@@ -168,10 +185,16 @@ public class greekLetterGridsScript : MonoBehaviour
         {
             DebugLog("The last digit of the serial # is COMPOSITE");
         }
+        bombEdgework.serialNumber = serialNumber;
+    }
 
+    void Rules()
+    {
         string[] lettersCorrect = new string[] { "", "", "" };
         float[] lettersInitialX = new float[] { letter1InitialX, letter2InitialX, letter3InitialX };
         float[] lettersInitialZ = new float[] { letter1InitialZ, letter2InitialZ, letter3InitialZ };
+        string serialNumber = bombEdgework.serialNumber;
+        string serialNumberLastChar = serialNumber.Substring(serialNumber.Length - 1);
 
         //Check for each letter (e.g. if there is an uppercase alpha)
         for (int i = 0; i < letters.Length; i++)
@@ -209,7 +232,7 @@ public class greekLetterGridsScript : MonoBehaviour
                         lettersCorrect[i] = CoordinateConversion(lettersInitialX[i], lettersInitialZ[i]);
                         DebugLog("UPPERCASE ALPHA CONDITION: #5 (N/A)");
                     }
-                break;
+                    break;
 
                 case "α":
                     //If initially in column D...
@@ -706,7 +729,7 @@ public class greekLetterGridsScript : MonoBehaviour
                             DebugLog("UPPERCASE SIGMA CONDITION: #5 (N/A)");
                         }
                     }
-                    
+
                     //Lowercase Sigma
                     else
                     {
@@ -834,11 +857,6 @@ public class greekLetterGridsScript : MonoBehaviour
         letter1CorrectZ = possibleXorZ[4 - (lettersCorrect[0][1] - '0')];
         letter2CorrectZ = possibleXorZ[4 - (lettersCorrect[1][1] - '0')];
         letter3CorrectZ = possibleXorZ[4 - (lettersCorrect[2][1] - '0')];
-        //Verify the expected coordinate is the same as the reported coordinate (Debug code)
-        Debug.LogFormat("<Greek Letter Grid #{0}> First:{1}, Second:{2}, Third:{3}", moduleId,
-            CoordinateConversion(letter1CorrectX, letter1CorrectZ),
-            CoordinateConversion(letter2CorrectX, letter2CorrectZ),
-            CoordinateConversion(letter3CorrectX, letter3CorrectZ));
     }
 
     string CoordinateConversion(float coordinateX, float coordinateZ)
@@ -940,6 +958,9 @@ public class greekLetterGridsScript : MonoBehaviour
         {
             return;
         }
+
+        //Rules based on user action
+        Rules();
 
         if ((letter1CurrentX.ToString().Equals(letter1CorrectX.ToString()) && letter1CurrentZ.ToString().Equals(letter1CorrectZ.ToString())) && (letter2CurrentX.ToString().Equals(letter2CorrectX.ToString()) && letter2CurrentZ.ToString().Equals(letter2CorrectZ.ToString())) && (letter3CurrentX.ToString().Equals(letter3CorrectX.ToString()) && letter3CurrentZ.ToString().Equals(letter3CorrectZ.ToString()))) //Add letters 2 & 3 when done.
         {
