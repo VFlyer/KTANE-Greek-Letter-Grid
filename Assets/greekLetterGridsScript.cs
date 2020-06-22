@@ -85,6 +85,9 @@ public class greekLetterGridsScript : MonoBehaviour
         public int BatteryHolderCount;
     }
 
+    //Lowercase Theta condition for determining when the answer may be accepted
+    bool noCondition;
+
     void Awake()
     {
         moduleId = moduleIdCounter++;
@@ -165,16 +168,8 @@ public class greekLetterGridsScript : MonoBehaviour
         letter3InitialX = letters[2].transform.localPosition.x;
         letter3InitialZ = letters[2].transform.localPosition.z;
 
-        //Determine Solution
         //Get Edgework Vars
         DefineEdgework();
-        Rules();
-
-        //Verify the expected coordinate is the same as the reported coordinate (Debug code)
-        Debug.LogFormat("<Greek Letter Grid #{0}> First:{1}, Second:{2}, Third:{3}", moduleId,
-            CoordinateConversion(letter1CorrectX, letter1CorrectZ),
-            CoordinateConversion(letter2CorrectX, letter2CorrectZ),
-            CoordinateConversion(letter3CorrectX, letter3CorrectZ));
     }
 
     void DefineEdgework()
@@ -219,7 +214,7 @@ public class greekLetterGridsScript : MonoBehaviour
         bombEdgework.BatteryHolderCount = bomb.GetBatteryHolderCount();
     }
 
-    void Rules()
+    void Rules(int bombTime)
     {
         string[] lettersCorrect = new string[] { "", "", "" };
         float[] lettersInitialX = new float[] { letter1InitialX, letter2InitialX, letter3InitialX };
@@ -577,6 +572,7 @@ public class greekLetterGridsScript : MonoBehaviour
                     //Otherwise, if nothing applies...
                     else
                     {
+                        noCondition = true;
                         lettersCorrect[i] = "A2";
                         DebugLog("LOWERCASE THETA CONDITION: #5 (N/A)");
                     }
@@ -683,7 +679,7 @@ public class greekLetterGridsScript : MonoBehaviour
                     //Otherwise, if nothing applies...
                     else
                     {
-                        int zIndex = 3 - (((int)bomb.GetTime() / 60) % 4);
+                        int zIndex = 3 - (bombTime % 4);
                         lettersCorrect[i] = CoordinateConversion(possibleXorZ[0], possibleXorZ[zIndex]);
                         DebugLog("UPPERCASE PI CONDITION: #5 (N/A)");
                     }
@@ -996,8 +992,17 @@ public class greekLetterGridsScript : MonoBehaviour
             return;
         }
 
+        int bombTime = (int)bomb.GetTime() / 60;
+
         //Rules based on user action
-        Rules();
+        Rules(bombTime);
+        if (noCondition && bombTime % 2 == 0)
+        {
+            GetComponent<KMBombModule>().HandleStrike();
+            DebugLog("You failed. Try again, but do better! You submitted during an even minute while the final lowercase theta condition was active.");
+            Start();
+            return;
+        }
 
         if ((letter1CurrentX.ToString().Equals(letter1CorrectX.ToString()) && letter1CurrentZ.ToString().Equals(letter1CorrectZ.ToString())) && (letter2CurrentX.ToString().Equals(letter2CorrectX.ToString()) && letter2CurrentZ.ToString().Equals(letter2CorrectZ.ToString())) && (letter3CurrentX.ToString().Equals(letter3CorrectX.ToString()) && letter3CurrentZ.ToString().Equals(letter3CorrectZ.ToString()))) //Add letters 2 & 3 when done.
         {
@@ -1078,18 +1083,18 @@ public class greekLetterGridsScript : MonoBehaviour
             var btns = new List<KMSelectable>();
             var pieces = command.Trim().ToLowerInvariant().Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
 
-            for (int i = 1; i < pieces.Length; i++)
+            if (1 < pieces.Length)
             {
-                switch (pieces[i])
+                switch (pieces[1])
                 {
                     case "u": btns.Add(upButton); break;
                     case "l": btns.Add(leftButton); break;
                     case "r": btns.Add(rightButton); break;
                     case "d": btns.Add(downButton); break;
                     default:
-                        if (pieces[i].All(c => new[] { 'u', 'l', 'r', 'd' }.Contains(c)))
+                        if (pieces[1].All(c => new[] { 'u', 'l', 'r', 'd' }.Contains(c)))
                         {
-                            foreach(char c in pieces[i])
+                            foreach(char c in pieces[1])
                             {
                                 switch(c)
                                 {
