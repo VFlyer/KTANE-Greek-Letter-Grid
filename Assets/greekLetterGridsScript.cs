@@ -22,6 +22,8 @@ public class greekLetterGridsScript : MonoBehaviour
     string[] possibleLetters = { "A", "α", "B", "β", "Γ", "γ", "Δ", "δ", "Θ", "θ", "Λ", "λ", "Π", "π", "Σ", "σ", "Ω", "ω" };
     Color[] possibleColors = { new Color(1, 1, 1, 1), new Color(1, 0, 1, 1), new Color(1, 1, 0, 1), new Color(0, 1, 0, 1), new Color(0, 1, 1, 1) }; //Order of Colors: White, Magenta, Yellow, Green, Cyan
     float[] possibleXorZ = { -0.0375f, -0.0125f, 0.0125f, 0.0375f };
+    int[] letterIndex = new int[3];
+    int[] colorIndex = new int[3];
     /*
      *         X Axis Reference
      * -0.0375f, -0.0125f, 0.0125f, 0.0375f
@@ -37,25 +39,102 @@ public class greekLetterGridsScript : MonoBehaviour
     float letter2InitialZ;
     float letter3InitialX;
     float letter3InitialZ;
-    float letter1CurrentX;
-    float letter1CurrentZ;
-    float letter2CurrentX;
-    float letter2CurrentZ;
-    float letter3CurrentX;
-    float letter3CurrentZ;
     float letter1CorrectX;
     float letter1CorrectZ;
     float letter2CorrectX;
     float letter2CorrectZ;
     float letter3CorrectX;
     float letter3CorrectZ;
-    float selectedLetterX;
-    float selectedLetterZ;
+    float letter1CurrentX
+    {
+        get
+        {
+            return letters[0].transform.localPosition.x;
+        }
+    }
+    float letter1CurrentZ
+    {
+        get
+        {
+            return letters[0].transform.localPosition.z;
+        }
+    }
+    float letter2CurrentX
+    {
+        get
+        {
+            return letters[1].transform.localPosition.x;
+        }
+    }
+    float letter2CurrentZ
+    {
+        get
+        {
+            return letters[1].transform.localPosition.z;
+        }
+    }
+    float letter3CurrentX
+    {
+        get
+        {
+            return letters[2].transform.localPosition.x;
+        }
+    }
+    float letter3CurrentZ
+    {
+        get
+        {
+            return letters[2].transform.localPosition.z;
+        }
+    }
+    float selectedLetterX
+    {
+        get
+        {
+            return selectedLetter.transform.localPosition.x;
+        }
+    }
+    float selectedLetterZ
+    {
+        get
+        {
+            return selectedLetter.transform.localPosition.z;
+        }
+    }
+    float[] lettersInitialX
+    {
+        get
+        {
+            return new [] { letter1InitialX, letter2InitialX, letter3InitialX };
+        }
+    }
+    float[] lettersInitialZ
+    {
+        get
+        {
+            return new[] { letter1InitialZ, letter2InitialZ, letter3InitialZ };
+        }
+    }
+    float[] lettersCurrentX
+    {
+        get
+        {
+            return new[] { letter1CurrentX, letter2CurrentX, letter3CurrentX };
+        }
+    }
+    float[] lettersCurrentZ
+    {
+        get
+        {
+            return new[] { letter1CurrentZ, letter2CurrentZ, letter3CurrentZ };
+        }
+    }
     string[] oddDigits = { "1", "3", "5", "7", "9" };
     string[] evenDigits = { "2", "4", "6", "8", "0" };
     string[] primeNumbers = { "2", "3", "5", "7" };
     string[] uppercaseLetters = { "A", "B", "Γ", "Δ", "Θ", "Λ", "Π", "Σ", "Ω" };
     string[] lowercaseLetters = { "α", "β", "γ", "δ", "θ", "λ", "π", "σ", "ω" };
+    string[] LetterNames = { "Alpha", "Beta", "Gamma", "Delta", "Theta", "Lambda", "Pi", "Sigma", "Omega" };
 
     //Logging
     static int moduleIdCounter = 1;
@@ -103,56 +182,57 @@ public class greekLetterGridsScript : MonoBehaviour
         rightButton.OnInteract += delegate () { PressRightButton(); return false; };
         resetButton.OnInteract += delegate () { PressResetButton(); return false; };
         submitButton.OnInteract += delegate () { Submit(); return false; };
+        //Get Edgework Vars
+        GetComponent<KMBombModule>().OnActivate += delegate () { 
+            DefineEdgework();
+
+            string[] chosenOne = new string[3];
+            for (int i = 0; i < letterIndex.Length; i++)
+            {
+                if (letterIndex[i] % 2 == 0)
+                    chosenOne[i] = "an uppercase";
+                else
+                    chosenOne[i] = "a lowercase";
+                chosenOne[i] += string.Format(" {0}({1}) at {2}", LetterNames[letterIndex[i] / 2].ToLower(), possibleLetters[letterIndex[i]], CoordinateConversion(lettersInitialX[i], lettersInitialZ[i]));
+            }
+
+            DebugLog("The chosen characters are {0}, {1}, and {2}", chosenOne[0], chosenOne[1], chosenOne[2]);
+        };
     }
     // Use this for initialization
     void Start()
     {
         //Setting Randomized Colors & Letters
         //Holiday rules before full random
-        if (System.DateTime.Now.Month == 1 && System.DateTime.Now.Day == 31) //The Mega Man X OVA "The Day of Sigma" was released on 01/31/06. All letters are now uppercase sigma. I'm sorry. I'm a Mega Man fanboy.
+        for (int i = 0; i < letters.Length; i++)
         {
-            lettersText[0].text = possibleLetters[14];
-            lettersText[0].color = possibleColors[UnityEngine.Random.Range(0, possibleColors.Length)];
-            lettersText[1].text = possibleLetters[14];
-            lettersText[1].color = possibleColors[UnityEngine.Random.Range(0, possibleColors.Length)];
-            lettersText[2].text = possibleLetters[14];
-            lettersText[2].color = possibleColors[UnityEngine.Random.Range(0, possibleColors.Length)];
-        }
-        else if (System.DateTime.Now.Month == 2 && System.DateTime.Now.Day == 14) //Happy Valentine's Day! All letters are now magenta.
-        {
-            lettersText[0].text = possibleLetters[UnityEngine.Random.Range(0, possibleLetters.Length)];
-            lettersText[0].color = possibleColors[1];
-            lettersText[1].text = possibleLetters[UnityEngine.Random.Range(0, possibleLetters.Length)];
-            lettersText[1].color = possibleColors[1];
-            lettersText[2].text = possibleLetters[UnityEngine.Random.Range(0, possibleLetters.Length)];
-            lettersText[2].color = possibleColors[1];
-        }
-        else if (System.DateTime.Now.Month == 3 && System.DateTime.Now.Day == 14) //Happy Pi Day! All letters are now upper/lowercase pi.
-        {
-            lettersText[0].text = possibleLetters[UnityEngine.Random.Range(12, 14)]; //Change the 12s back to possibleLetters.Length, as they are temporary.
-            lettersText[0].color = possibleColors[UnityEngine.Random.Range(0, possibleColors.Length)];
-            lettersText[1].text = possibleLetters[UnityEngine.Random.Range(12, 14)];
-            lettersText[1].color = possibleColors[UnityEngine.Random.Range(0, possibleColors.Length)];
-            lettersText[2].text = possibleLetters[UnityEngine.Random.Range(12, 14)];
-            lettersText[2].color = possibleColors[UnityEngine.Random.Range(0, possibleColors.Length)];
-        }
-        else if (System.DateTime.Now.Month == 3 && System.DateTime.Now.Day == 17) //Happy St. Patrick's Day! All letters are now green.
-        {
-            lettersText[0].text = possibleLetters[UnityEngine.Random.Range(0, possibleLetters.Length)];
-            lettersText[0].color = possibleColors[3];
-            lettersText[1].text = possibleLetters[UnityEngine.Random.Range(0, possibleLetters.Length)];
-            lettersText[1].color = possibleColors[3];
-            lettersText[2].text = possibleLetters[UnityEngine.Random.Range(0, possibleLetters.Length)];
-            lettersText[2].color = possibleColors[3];
-        }
-        else //Sigh, nothing special today... Everything is randomized. :(
-        {
-            lettersText[0].text = possibleLetters[UnityEngine.Random.Range(0, possibleLetters.Length)];
-            lettersText[0].color = possibleColors[UnityEngine.Random.Range(0, possibleColors.Length)];
-            lettersText[1].text = possibleLetters[UnityEngine.Random.Range(0, possibleLetters.Length)];
-            lettersText[1].color = possibleColors[UnityEngine.Random.Range(0, possibleColors.Length)];
-            lettersText[2].text = possibleLetters[UnityEngine.Random.Range(0, possibleLetters.Length)];
-            lettersText[2].color = possibleColors[UnityEngine.Random.Range(0, possibleColors.Length)];
+            if (DateTime.Now.Month == 1 && DateTime.Now.Day == 31) //The Mega Man X OVA "The Day of Sigma" was released on 01/31/06. All letters are now uppercase sigma. I'm sorry. I'm a Mega Man fanboy.
+            {
+                colorIndex[i] = UnityEngine.Random.Range(0, possibleColors.Length);
+                letterIndex[i] = 14;
+            }
+            else if (DateTime.Now.Month == 2 && DateTime.Now.Day == 14) //Happy Valentine's Day! All letters are now magenta.
+            {
+                colorIndex[i] = 1;
+                letterIndex[i] = UnityEngine.Random.Range(0, possibleLetters.Length);
+            }
+            else if (DateTime.Now.Month == 3 && DateTime.Now.Day == 14) //Happy Pi Day! All letters are now upper/lowercase pi.
+            {
+                colorIndex[i] = UnityEngine.Random.Range(0, possibleColors.Length);
+                letterIndex[i] = UnityEngine.Random.Range(12, 14);
+            }
+            else if (DateTime.Now.Month == 3 && DateTime.Now.Day == 17)  //Happy St. Patrick's Day! All letters are now green.
+            {
+                colorIndex[i] = 3;
+                letterIndex[i] = UnityEngine.Random.Range(0, possibleLetters.Length);
+            }
+            else //Sigh, nothing special today... Everything is randomized. :(
+            {
+                colorIndex[i] = UnityEngine.Random.Range(0, possibleColors.Length);
+                letterIndex[i] = UnityEngine.Random.Range(0, possibleLetters.Length);
+            }
+            lettersText[i].color = possibleColors[colorIndex[i]];
+            lettersText[i].text = possibleLetters[letterIndex[i]];
         }
 
         //Setting Random Positions
@@ -167,9 +247,6 @@ public class greekLetterGridsScript : MonoBehaviour
         letter2InitialZ = letters[1].transform.localPosition.z;
         letter3InitialX = letters[2].transform.localPosition.x;
         letter3InitialZ = letters[2].transform.localPosition.z;
-
-        //Get Edgework Vars
-        DefineEdgework();
     }
 
     void DefineEdgework()
@@ -200,7 +277,7 @@ public class greekLetterGridsScript : MonoBehaviour
         bombEdgework.SNDIndicatorOff = bomb.IsIndicatorOff("SND") || bomb.IsIndicatorOff("IND");
         bombEdgework.CARIndicatorOff = bomb.IsIndicatorOff("CAR");
         bombEdgework.CLRIndicatorOn = bomb.IsIndicatorOn("CLR");
-        bombEdgework.SIGIndicatorOn = !bomb.IsIndicatorOn("SIG");
+        bombEdgework.SIGIndicatorOn = bomb.IsIndicatorOn("SIG");
         bombEdgework.DVINotRJ = bomb.IsPortPresent(Port.DVI) && !bomb.IsPortPresent(Port.RJ45);
         bombEdgework.RCAPresent = bomb.IsPortPresent(Port.StereoRCA);
         bombEdgework.ParallelPresent = bomb.IsPortPresent(Port.Parallel);
@@ -214,19 +291,15 @@ public class greekLetterGridsScript : MonoBehaviour
         bombEdgework.BatteryHolderCount = bomb.GetBatteryHolderCount();
     }
 
-    void Rules(int bombTime)
+    void Rules(int bombTime, int solvedModules, int strikes)
     {
         string[] lettersCorrect = new string[] { "", "", "" };
-        float[] lettersInitialX = new float[] { letter1InitialX, letter2InitialX, letter3InitialX };
-        float[] lettersInitialZ = new float[] { letter1InitialZ, letter2InitialZ, letter3InitialZ };
         string serialNumber = bombEdgework.SerialNumber;
         string serialNumberLastChar = serialNumber.Substring(serialNumber.Length - 1);
         //Shorthand to avoid typing bombEdgework everywhere
         Edgework b = bombEdgework;
         int batteryCount = b.DBatteryCount + b.AABatteryCount;
         int indicatorCount = b.OnIndicatorCount + b.OffIndicatorCount;
-        int solvedModules = bomb.GetSolvedModuleNames().Count;
-        int strikes = bomb.GetStrikes();
 
         //Check for each letter (e.g. if there is an uppercase alpha)
         for (int i = 0; i < letters.Length; i++)
@@ -268,7 +341,7 @@ public class greekLetterGridsScript : MonoBehaviour
 
                 case "α":
                     //If initially in column D...
-                    if (lettersInitialX[i] == 0.0375f)
+                    if (Mathf.Approximately(lettersInitialX[i], 0.0375f))
                     {
                         lettersCorrect[i] = CoordinateConversion(lettersInitialX[i] - 0.05f, lettersInitialZ[i]);
                         DebugLog("LOWERCASE ALPHA CONDITION: #1 (Initially in column D)");
@@ -307,7 +380,7 @@ public class greekLetterGridsScript : MonoBehaviour
                         DebugLog("UPPERCASE BETA CONDITION: #1 (this letter is cyan)");
                     }
                     //Otherwise, if this letter was initially found in row 3...
-                    else if (lettersInitialZ[i] == -0.0125f)
+                    else if (Mathf.Approximately(lettersInitialZ[i], -0.0125f))
                     {
                         lettersCorrect[i] = CoordinateConversion(lettersInitialX[i], lettersInitialZ[i] + 0.025f);
                         DebugLog("UPPERCASE BETA CONDITION: #2 (this letter was found in row 3)");
@@ -334,13 +407,13 @@ public class greekLetterGridsScript : MonoBehaviour
 
                 case "β":
                     //If this letter starts in A3...
-                    if (lettersInitialX[i] == -0.0375f && lettersInitialZ[i] == -0.0125f)
+                    if (CoordinateConversion(lettersInitialX[i], lettersInitialZ[i]) == "A3")
                     {
                         lettersCorrect[i] = "C4";
                         DebugLog("LOWERCASE BETA CONDITION: #1 (this letter started in A3)");
                     }
                     //Otherwise, if a letter is white and was initially found in the A column...
-                    else if ((letter1InitialX == -0.0375f && lettersText[0].color == new Color(1, 1, 1, 1)) || (letter2InitialX == -0.0375f && lettersText[1].color == new Color(1, 1, 1, 1)) || (letter3InitialX == -0.0375f && lettersText[2].color == new Color(1, 1, 1, 1)))
+                    else if ((Mathf.Approximately(letter1InitialX, -0.0375f) && lettersText[0].color == new Color(1, 1, 1, 1)) || (Mathf.Approximately(letter2InitialX, -0.0375f) && lettersText[1].color == new Color(1, 1, 1, 1)) || (Mathf.Approximately(letter3InitialX, -0.0375f) && lettersText[2].color == new Color(1, 1, 1, 1)))
                     {
                         lettersCorrect[i] = "A2";
                         DebugLog("LOWERCASE BETA CONDITION: #2 (white letter was found in the A column)");
@@ -385,7 +458,7 @@ public class greekLetterGridsScript : MonoBehaviour
                         DebugLog("UPPERCASE GAMMA CONDITION: #3 (all letters are magenta)");
                     }
                     //Otherwise, if this letter is cyan and starts in row 4...
-                    else if (lettersText[i].color == new Color(0, 1, 1, 1) && lettersInitialZ[i] == -0.0375f)
+                    else if (lettersText[i].color == new Color(0, 1, 1, 1) && Mathf.Approximately(lettersInitialZ[i], -0.0375f))
                     {
                         lettersCorrect[i] = CoordinateConversion(lettersInitialX[i], lettersInitialZ[i] + 0.05f);
                         DebugLog("UPPERCASE GAMMA CONDITION: #1 (this letter is cyan and started in row 4)");
@@ -412,9 +485,9 @@ public class greekLetterGridsScript : MonoBehaviour
                         DebugLog("LOWERCASE GAMMA CONDITION: #2 (this letter is NOT cyan and vowel detected)");
                     }
                     //Otherwise, if this letter starts in column C...
-                    else if (lettersInitialX[i] == 0.0125f)
+                    else if (Mathf.Approximately(lettersInitialX[i], 0.0125f))
                     {
-                        DebugLog("LOWERCASE GAMMA CONDITION: #2 (this letter starts in column C)");
+                        DebugLog("LOWERCASE GAMMA CONDITION: #3 (this letter starts in column C)");
                         if (int.Parse(serialNumberLastChar) <= 4) //If the last digit of the serial number is less than or equal to 4...
                         {
                             lettersCorrect[i] = CoordinateConversion(lettersInitialX[i] - 0.05f, lettersInitialZ[i]);
@@ -487,7 +560,7 @@ public class greekLetterGridsScript : MonoBehaviour
                         DebugLog("LOWERCASE DELTA CONDITION: #2 (solved modules + last digit > 10)");
                     }
                     //Otherwise, if any letter starts in A3...
-                    else if ((letter1InitialX == -0.0375f && letter1InitialZ == -0.0125f) || (letter2InitialX == -0.0375f && letter2InitialZ == -0.0125f) || (letter3InitialX == -0.0375f && letter3InitialZ == -0.0125f))
+                    else if (new string[] { CoordinateConversion(letter1InitialX, letter1InitialZ), CoordinateConversion(letter2InitialX, letter2InitialZ), CoordinateConversion(letter3InitialX, letter3InitialZ) }.Contains("A3"))
                     {
                         lettersCorrect[i] = "A3";
                         DebugLog("LOWERCASE DELTA CONDITION: #3 (a letter starts in A3)");
@@ -545,7 +618,7 @@ public class greekLetterGridsScript : MonoBehaviour
 
                 case "θ":
                     //If this letter starts in a row unique to the other 2 letters...
-                    if (lettersInitialZ[(i + 1) % letters.Length] != lettersInitialZ[i] && lettersInitialZ[(i + 2) % letters.Length] != lettersInitialZ[i])
+                    if (!lettersInitialZ[(i + 1) % letters.Length].ToString().Equals(lettersInitialZ[i].ToString()) && !lettersInitialZ[(i + 2) % letters.Length].ToString().Equals(lettersInitialZ[i].ToString()))
                     {
                         lettersCorrect[i] = "D3";
                         DebugLog("LOWERCASE THETA CONDITION: #1 (initial row is unique)");
@@ -671,7 +744,7 @@ public class greekLetterGridsScript : MonoBehaviour
                         DebugLog("UPPERCASE PI CONDITION: #3 (initial row is shared)");
                     }
                     //Otherwise, if this letter starts in one of the corners of the grid...
-                    else if (Math.Abs(lettersInitialX[i]) == 0.0375f && Math.Abs(lettersInitialZ[i]) == 0.0375f)
+                    else if (Mathf.Approximately(Math.Abs(lettersInitialX[i]), 0.0375f) && Mathf.Approximately(Math.Abs(lettersInitialZ[i]), 0.0375f))
                     {
                         lettersCorrect[i] = "A3";
                         DebugLog("UPPERCASE PI CONDITION: #4 (initially in corner)");
@@ -839,7 +912,7 @@ public class greekLetterGridsScript : MonoBehaviour
 
                 case "ω":
                     //If this letter starts in C4...
-                    if (lettersInitialX[i] == 0.0125f && lettersInitialZ[i] == -0.0375f)
+                    if (CoordinateConversion(lettersInitialX[i], lettersInitialZ[i]) == "C4")
                     {
                         lettersCorrect[i] = "B2";
                         DebugLog("LOWERCASE OMEGA CONDITION: #1 (this letter starts in C4)");
@@ -894,17 +967,17 @@ public class greekLetterGridsScript : MonoBehaviour
 
     string CoordinateConversion(float coordinateX, float coordinateZ)
     {
-         Dictionary<float, char> conversion = new Dictionary<float, char>
+        Dictionary<string, char> conversion = new Dictionary<string, char>
         {
-            { possibleXorZ[0], 'A' },
-            { possibleXorZ[1], 'B' },
-            { possibleXorZ[2], 'C' },
-            { possibleXorZ[3], 'D' }
+            { possibleXorZ[0].ToString(), 'A' },
+            { possibleXorZ[1].ToString(), 'B' },
+            { possibleXorZ[2].ToString(), 'C' },
+            { possibleXorZ[3].ToString(), 'D' }
         };
-        char X = conversion[coordinateX];
-        //'A' - 'A' = 0, 4 - 0 = 4 // 'D' - 'A' = 3, 4 - 3 = 1
-        int Z = 4 - (conversion[coordinateZ] - 'A');
-        return X.ToString() + Z.ToString();
+        char X = conversion[coordinateX.ToString()];
+        //4 - ('A' - 'A' = 0) = 4 // 4 - ('D' - 'A' = 3) = 1
+        int Z = 4 - (conversion[coordinateZ.ToString()] - 'A');
+        return string.Format("{0}{1}", X, Z);
     }
 
     //Arrow and Resest Button Interaction Methods
@@ -915,9 +988,9 @@ public class greekLetterGridsScript : MonoBehaviour
         if (selectedLetter != null && moduleSolved == false)
         {
             DebugLog("You pressed up! You deserve a cookie!");
-            if (selectedLetterZ != 0.0375f)
+            if (!Mathf.Approximately(selectedLetterZ, 0.0375f))
             {
-                selectedLetter.transform.localPosition = new Vector3(selectedLetterX, 0.013f, selectedLetterZ += 0.025f);
+                selectedLetter.transform.localPosition = new Vector3(selectedLetterX, 0.013f, selectedLetterZ + 0.025f);
             }
         }
     }
@@ -929,9 +1002,9 @@ public class greekLetterGridsScript : MonoBehaviour
         if (selectedLetter != null && moduleSolved == false)
         {
             DebugLog("You pressed down! You deserve a cookie!");
-            if (selectedLetterZ != -0.0375f)
+            if (!Mathf.Approximately(selectedLetterZ, -0.0375f))
             {
-                selectedLetter.transform.localPosition = new Vector3(selectedLetterX, 0.013f, selectedLetterZ -= 0.025f);
+                selectedLetter.transform.localPosition = new Vector3(selectedLetterX, 0.013f, selectedLetterZ - 0.025f);
             }
         }
     }
@@ -943,9 +1016,9 @@ public class greekLetterGridsScript : MonoBehaviour
         if (selectedLetter != null && moduleSolved == false)
         {
             DebugLog("You pressed left! You deserve a cookie!");
-            if (selectedLetterX != -0.0375f)
+            if (!Mathf.Approximately(selectedLetterX, -0.0375f))
             {
-                selectedLetter.transform.localPosition = new Vector3(selectedLetterX -= 0.025f, 0.013f, selectedLetterZ);
+                selectedLetter.transform.localPosition = new Vector3(selectedLetterX - 0.025f, 0.013f, selectedLetterZ);
             }
         }
     }
@@ -957,9 +1030,9 @@ public class greekLetterGridsScript : MonoBehaviour
         if (selectedLetter != null && moduleSolved == false)
         {
             DebugLog("You pressed right! You deserve a cookie!");
-            if (selectedLetterX != 0.0375f)
+            if (!Mathf.Approximately(selectedLetterX, 0.0375f))
             {
-                selectedLetter.transform.localPosition = new Vector3(selectedLetterX += 0.025f, 0.013f, selectedLetterZ);
+                selectedLetter.transform.localPosition = new Vector3(selectedLetterX + 0.025f, 0.013f, selectedLetterZ);
             }
         }
     }
@@ -975,9 +1048,10 @@ public class greekLetterGridsScript : MonoBehaviour
         else
         {
             DebugLog("You reset the module.");
-            letters[0].transform.localPosition = new Vector3(letter1InitialX, 0.013f, letter1InitialZ);
-            letters[1].transform.localPosition = new Vector3(letter2InitialX, 0.013f, letter2InitialZ);
-            letters[2].transform.localPosition = new Vector3(letter3InitialX, 0.013f, letter3InitialZ);
+            for (int i = 0; i < letters.Length; i++)
+            {
+                letters[i].transform.localPosition = new Vector3(lettersInitialX[i], 0.013f, lettersInitialZ[i]);
+            }
             selectedLetter = null;
         }
     }
@@ -995,7 +1069,7 @@ public class greekLetterGridsScript : MonoBehaviour
         int bombTime = (int)bomb.GetTime() / 60;
 
         //Rules based on user action
-        Rules(bombTime);
+        Rules(bombTime, bomb.GetSolvedModuleNames().Count, bomb.GetStrikes());
         if (noCondition && bombTime % 2 == 0)
         {
             GetComponent<KMBombModule>().HandleStrike();
@@ -1014,9 +1088,16 @@ public class greekLetterGridsScript : MonoBehaviour
         else
         {
             GetComponent<KMBombModule>().HandleStrike();
-            DebugLog("You failed. Try again, but do better! The correct coordinate for Letter 1 was " + CoordinateConversion(letter1CorrectX, letter1CorrectZ) + ". Your submitted coordinate was " + CoordinateConversion(letter1CurrentX, letter1CurrentZ));
-            DebugLog("The correct coordinate for Letter 2 was " + CoordinateConversion(letter2CorrectX, letter2CorrectZ) + ". Your submitted coordinate was " + CoordinateConversion(letter2CurrentX, letter2CurrentZ));
-            DebugLog("The correct coordinate for Letter 3 was " + CoordinateConversion(letter3CorrectX, letter3CorrectZ) + ". Your submitted coordinate was " + CoordinateConversion(letter3CurrentX, letter3CurrentZ));
+            float[] lettersCorrectX = { letter1CorrectX, letter2CorrectX, letter3CorrectX };
+            float[] lettersCorrectZ = { letter1CorrectZ, letter2CorrectZ, letter3CorrectZ };
+            string firstMessage = "You failed. Try again, but do better! ";
+            for (int i = 0; i < 3; i++)
+            {
+                string log = "The correct coordinate for Letter " + i + " was " + CoordinateConversion(lettersCorrectX[i], lettersCorrectZ[i]) + ". Your submitted coordinate was " + CoordinateConversion(lettersCurrentX[i], lettersCurrentZ[i]);
+                if (i == 0)
+                    log = firstMessage + log;
+                DebugLog(log);
+            }
             Start(); //Reset module with new letters in new positions.
 
         }
@@ -1028,20 +1109,7 @@ public class greekLetterGridsScript : MonoBehaviour
         GetComponent<KMAudio>().PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, transform);
         DebugLog("You pressed " + text);
         selectedLetter = letter;
-        selectedLetterX = selectedLetter.transform.localPosition.x;
-        selectedLetterZ = selectedLetter.transform.localPosition.z;
         selectedLetter.AddInteractionPunch();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        letter1CurrentX = letters[0].transform.localPosition.x;
-        letter1CurrentZ = letters[0].transform.localPosition.z;
-        letter2CurrentX = letters[1].transform.localPosition.x;
-        letter2CurrentZ = letters[1].transform.localPosition.z;
-        letter3CurrentX = letters[2].transform.localPosition.x;
-        letter3CurrentZ = letters[2].transform.localPosition.z;
     }
 
     void DebugLog(string log, params object[] args)
@@ -1112,5 +1180,56 @@ public class greekLetterGridsScript : MonoBehaviour
         }
 
         return null;
+    }
+
+    IEnumerator TwitchHandleForcedSolve()
+    {
+        //Make sure the time it takes to solve doesn't change the answer
+        var currentStrikes = bomb.GetStrikes();
+        var currentSolves = bomb.GetSolvedModuleNames().Count;
+        var currentMinute = (int)bomb.GetTime() / 60;
+
+        Rules(currentMinute, currentSolves, currentStrikes);
+        var lettersCorrectX = new[] { letter1CorrectX, letter2CorrectX, letter3CorrectX };
+        var lettersCorrectZ = new[] { letter1CorrectZ, letter2CorrectZ, letter3CorrectZ };
+        for (int i = 0; i < letters.Length; i++)
+        {
+            var step = 0;
+            letters[i].OnInteract();
+            var correctCoordinate = CoordinateConversion(lettersCorrectX[i], lettersCorrectZ[i]);
+            while(CoordinateConversion(lettersCurrentX[i], lettersCurrentZ[i]) != correctCoordinate)
+            {
+                if (lettersCurrentX[i].ToString() != lettersCorrectX[i].ToString())
+                {
+                    if (lettersCurrentX[i] < lettersCorrectX[i])
+                        rightButton.OnInteract();
+                    else
+                        leftButton.OnInteract();
+                }
+                else if (lettersCurrentZ[i].ToString() != lettersCorrectZ[i].ToString())
+                {
+                    if (lettersCurrentZ[i] < lettersCorrectZ[i])
+                        upButton.OnInteract();
+                    else
+                        downButton.OnInteract();
+                }
+            }
+            //Give the module a frame to actually move the letter
+            yield return null;
+            step++;
+            if (step > 16)
+            {
+                GetComponent<KMBombModule>().HandlePass();
+                Debug.LogFormat("<Greek Letter Grid #{0}> Autosolve could not be completed in a regular amount of steps, aborting.", moduleId);
+                yield break;
+            }
+        }
+        //Took too long to press buttons
+        if (currentMinute != (int)bomb.GetTime() / 60 || currentSolves != bomb.GetSolvedModuleNames().Count || currentStrikes != bomb.GetStrikes())
+        {
+            TwitchHandleForcedSolve();
+            yield break;
+        }
+        submitButton.OnInteract();
     }
 }
