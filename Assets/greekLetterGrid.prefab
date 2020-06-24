@@ -2402,6 +2402,10 @@ MonoBehaviour:
   - {fileID: 114971826483617316}
   - {fileID: 114321985018642524}
   - {fileID: 114441159678873686}
+  lettersText:
+  - {fileID: 102385812708459392}
+  - {fileID: 102011448713943798}
+  - {fileID: 102604604285972432}
   TwitchHelpMessage: Select a letter to move with !{0} select [1 | 2 | 3]. Use the
     arrow buttons with !{0} [press | move] [u | l | r | d]. You can string as many
     movements together in one command. Reset with !{0} reset. Submit with !{0} submit.
