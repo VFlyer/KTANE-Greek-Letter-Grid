@@ -740,7 +740,7 @@ public class greekLetterGridsScript : MonoBehaviour
                     //Otherwise, if this letter starts in the same row as another letter...
                     else if (lettersInitialZ[i] == lettersInitialZ[(i + 1) % letters.Length] || lettersInitialZ[i] == lettersInitialZ[(i + 2) % letters.Length])
                     {
-                        lettersCorrect[i] = "B2";
+                        lettersCorrect[i] = "D2";
                         DebugLog("UPPERCASE PI CONDITION: #3 (initial row is shared)");
                     }
                     //Otherwise, if this letter starts in one of the corners of the grid...
@@ -887,7 +887,7 @@ public class greekLetterGridsScript : MonoBehaviour
                     //Otherwise, if the serial number contains a Z...
                     else if (b.SerialNumberLetters.Contains('Z'))
                     {
-                        lettersCorrect[i] = "C2";
+                        lettersCorrect[i] = "D2";
                         DebugLog("UPPERCASE OMEGA CONDITION: #2 (serial number Z detected)");
                     }
                     //Otherwise, if there is an uppercase alpha on the module...
