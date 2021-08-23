@@ -500,7 +500,7 @@ public class greekLetterGridsScript : MonoBehaviour
                         }
                     }
                     //Otherwise, if the last digit of the serial number is prime...
-                    else if (primeNumbers.ToString().Contains(serialNumberLastChar))
+                    else if (primeNumbers.Contains(serialNumberLastChar))
                     {
                         lettersCorrect[i] = "D3";
                         DebugLog("LOWERCASE GAMMA CONDITION: #4 (last digit of the serial number is prime)");
