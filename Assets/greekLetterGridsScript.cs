@@ -17,6 +17,7 @@ public class greekLetterGridsScript : MonoBehaviour
     public KMSelectable resetButton;
     public KMSelectable submitButton;
     public KMSelectable[] letters;
+    public KMSelectable[] quickSelectLetters;
     public TextMesh[] lettersText;
     private KMSelectable selectedLetter;
     string[] possibleLetters = { "A", "α", "B", "β", "Γ", "γ", "Δ", "δ", "Θ", "θ", "Λ", "λ", "Π", "π", "Σ", "σ", "Ω", "ω" };
@@ -176,6 +177,14 @@ public class greekLetterGridsScript : MonoBehaviour
             TextMesh text = letter.GetComponent<TextMesh>();
             letter.OnInteract += delegate () { PressLetter(pressedLetter, text); return false; };
         }
+
+        for (int i = 0; i < quickSelectLetters.Length; i++)
+        {
+            KMSelectable QSLetter = quickSelectLetters[i];
+            KMSelectable pressedLetter = letters[i];
+            TextMesh text = letters[i].GetComponent<TextMesh>();
+            QSLetter.OnInteract += delegate () { PressLetter(pressedLetter, text); return false; };
+        }
         upButton.OnInteract += delegate () { PressUpButton(); return false; };
         downButton.OnInteract += delegate () { PressDownButton(); return false; };
         leftButton.OnInteract += delegate () { PressLeftButton(); return false; };
@@ -233,6 +242,9 @@ public class greekLetterGridsScript : MonoBehaviour
             }
             lettersText[i].color = possibleColors[colorIndex[i]];
             lettersText[i].text = possibleLetters[letterIndex[i]];
+            var qsText = quickSelectLetters[i].GetComponentInChildren<TextMesh>();
+            qsText.text = possibleLetters[letterIndex[i]];
+            qsText.color = possibleColors[colorIndex[i]];
         }
 
         //Setting Random Positions
@@ -270,7 +282,7 @@ public class greekLetterGridsScript : MonoBehaviour
         }
         else
         {
-            DebugLog("The last digit of the serial # is COMPOSITE");
+            DebugLog("The last digit of the serial # is NOT PRIME");
         }
         bombEdgework.SerialNumber = serialNumber;
         bombEdgework.SerialNumberLetters = bomb.GetSerialNumberLetters();
